@@ -1,6 +1,8 @@
 const express = require("express");
 const app = express();
 
+app.use(express.json());
+
 let persons = [
   {
     id: 1,
@@ -48,6 +50,42 @@ app.get("/info", (request, response) => {
   const html = `<p>Phonebook has info for ${numPersons} people</p><p>${now}</p>`;
 
   response.send(html);
+});
+
+const generateId = () => {
+  // Create a random number between 0 and 1, and remove the "0." at the beginning.
+  const randomPart = Math.random().toString().slice(2);
+
+  // Combine the current timestamp with the random part.
+  const uniqueId = Date.now().toString() + randomPart;
+
+  return uniqueId;
+};
+
+app.post("/api/persons", (request, response) => {
+  const body = request.body;
+
+  if (!body.number || !body.name) {
+    return response.status(400).json({
+      error: "The name or number missing",
+    });
+  }
+
+  if (persons.some((person) => person.name === body.name)) {
+    return response.status(400).json({
+      error: "Name must be unique",
+    });
+  }
+
+  const person = {
+    id: generateId(),
+    name: body.name,
+    number: body.number,
+  };
+
+  persons = persons.concat(person);
+
+  response.json(person);
 });
 
 app.delete("/api/persons/:id", (request, response) => {
